@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="cyan">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A precision, modern, and interactive stopwatch web application with lap timing, statistics, audio feedback, and data export.">
+  <title>Chronos — Precision Interactive Stopwatch</title>
+  
+  <!-- Google Fonts: Plus Jakarta Sans for UI & JetBrains Mono for Timer Numbers -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Ambient background glow effects -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+
+  <div class="app-container">
+    <!-- Top Navigation / App Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="13" r="8"></circle>
+            <path d="M12 9v4l2 2"></path>
+            <path d="M5 3L2 6"></path>
+            <path d="M22 6l-3-3"></path>
+            <path d="M12 2v3"></path>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Chronos<span class="pro-tag">PRO</span></h1>
+          <p class="subtitle">High-Precision Digital Stopwatch</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Theme Accent Picker -->
+        <div class="theme-selector" id="theme-selector" title="Change Accent Theme">
+          <button class="theme-btn active" data-color="cyan" style="--c: #00f2fe;" aria-label="Cyan theme"></button>
+          <button class="theme-btn" data-color="emerald" style="--c: #10b981;" aria-label="Emerald theme"></button>
+          <button class="theme-btn" data-color="purple" style="--c: #a855f7;" aria-label="Purple theme"></button>
+          <button class="theme-btn" data-color="amber" style="--c: #f59e0b;" aria-label="Amber theme"></button>
+        </div>
+
+        <!-- Sound Feedback Toggle -->
+        <button id="sound-toggle-btn" class="icon-btn" title="Toggle Sound Feedback" aria-label="Toggle Sound">
+          <svg class="icon sound-on" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+          </svg>
+          <svg class="icon sound-off hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="1" y1="1" x2="23" y2="23"></line>
+            <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path>
+            <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"></path>
+            <line x1="12" y1="19" x2="12" y2="23"></line>
+            <line x1="8" y1="23" x2="16" y2="23"></line>
+          </svg>
+        </button>
+
+        <!-- Keyboard Shortcuts Help -->
+        <button id="shortcuts-toggle-btn" class="icon-btn" title="Keyboard Shortcuts" aria-label="Keyboard Shortcuts">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+            <line x1="6" y1="8" x2="6" y2="8"></line>
+            <line x1="10" y1="8" x2="10" y2="8"></line>
+            <line x1="14" y1="8" x2="14" y2="8"></line>
+            <line x1="18" y1="8" x2="18" y2="8"></line>
+            <line x1="6" y1="12" x2="6" y2="12"></line>
+            <line x1="18" y1="12" x2="18" y2="12"></line>
+            <line x1="7" y1="16" x2="17" y2="16"></line>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Layout Grid -->
+    <main class="stopwatch-layout">
+      <!-- Left / Hero Section: Stopwatch Dial and Primary Controls -->
+      <section class="stopwatch-card">
+        <!-- Circular Dial Container -->
+        <div class="dial-container">
+          <svg class="progress-ring" viewBox="0 0 320 320">
+            <!-- Background Dial Ring -->
+            <circle class="ring-bg" cx="160" cy="160" r="140"></circle>
+            <!-- Minute/Second Dial ticks -->
+            <g class="dial-ticks" id="dial-ticks"></g>
+            <!-- Dynamic Progress Ring (Seconds / 60s cycle) -->
+            <circle class="ring-progress" id="ring-progress" cx="160" cy="160" r="140"></circle>
+            <!-- Outer Millisecond Pulse Ring -->
+            <circle class="ring-pulse" id="ring-pulse" cx="160" cy="160" r="150"></circle>
+          </svg>
+
+          <!-- Inside Dial Digital Readout -->
+          <div class="dial-content">
+            <div class="status-indicator" id="status-indicator">
+              <span class="status-dot"></span>
+              <span class="status-text" id="status-text">READY</span>
+            </div>
+
+            <div class="time-display" id="time-display" aria-live="polite">
+              <div class="time-main">
+                <span id="hours-display">00</span><span class="separator">:</span><span id="minutes-display">00</span><span class="separator">:</span><span id="seconds-display">00</span>
+              </div>
+              <div class="time-fraction">
+                <span class="fraction-dot">.</span><span id="milliseconds-display">00</span>
+              </div>
+            </div>
+
+            <!-- Current Running Lap Preview -->
+            <div class="current-lap-preview" id="current-lap-preview">
+              <span class="preview-label">Current Lap:</span>
+              <span class="preview-time" id="current-lap-time">00:00:00.00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Primary Controls -->
+        <div class="controls-cluster">
+          <!-- Lap Button -->
+          <button id="lap-btn" class="ctrl-btn btn-secondary" disabled title="Lap (Hotkey: L)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+              <line x1="4" y1="22" x2="4" y2="15"></line>
+            </svg>
+            <span>Lap</span>
+            <kbd class="key-badge">L</kbd>
+          </button>
+
+          <!-- Start / Pause Main Action Button -->
+          <button id="start-btn" class="ctrl-btn btn-primary" title="Start / Pause (Hotkey: Space)">
+            <div class="btn-icon-wrapper" id="start-icon-wrapper">
+              <svg class="icon-play" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <svg class="icon-pause hidden" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+                <rect x="14" y="4" width="4" height="16" rx="1"></rect>
+              </svg>
+            </div>
+            <span id="start-btn-label">Start</span>
+            <kbd class="key-badge">Space</kbd>
+          </button>
+
+          <!-- Reset Button -->
+          <button id="reset-btn" class="ctrl-btn btn-secondary" disabled title="Reset (Hotkey: R)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg>
+            <span>Reset</span>
+            <kbd class="key-badge">R</kbd>
+          </button>
+        </div>
+      </section>
+
+      <!-- Right / Lap History & Analytics Section -->
+      <section class="lap-history-card">
+        <!-- Lap Section Header -->
+        <div class="lap-header">
+          <div class="lap-title-wrap">
+            <h2>Lap Times</h2>
+            <span class="lap-badge-counter" id="lap-counter">0 Laps</span>
+          </div>
+          <div class="lap-actions">
+            <button id="copy-laps-btn" class="lap-action-btn" disabled title="Copy Lap Data to Clipboard">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <span>Copy</span>
+            </button>
+            <button id="export-csv-btn" class="lap-action-btn" disabled title="Export as CSV File">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>CSV</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Lap Statistics Overview -->
+        <div class="stats-grid" id="stats-grid">
+          <div class="stat-card">
+            <span class="stat-label">Fastest Lap</span>
+            <span class="stat-value text-emerald" id="stat-fastest">--:--.--</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Slowest Lap</span>
+            <span class="stat-value text-rose" id="stat-slowest">--:--.--</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Average Lap</span>
+            <span class="stat-value text-cyan" id="stat-average">--:--.--</span>
+          </div>
+        </div>
+
+        <!-- Lap Table Header -->
+        <div class="lap-table-header">
+          <span class="col-idx">Lap</span>
+          <span class="col-split">Split</span>
+          <span class="col-total">Overall</span>
+        </div>
+
+        <!-- Scrollable Laps Container -->
+        <div class="lap-list-wrapper" id="lap-list-wrapper">
+          <div class="empty-state" id="empty-state">
+            <div class="empty-icon">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+            <p class="empty-title">No Laps Recorded</p>
+            <p class="empty-subtitle">Press the <kbd>Lap</kbd> button or <kbd>L</kbd> key while the stopwatch is running to record intervals.</p>
+          </div>
+
+          <ul class="lap-list" id="lap-list"></ul>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-shortcuts-hint">
+        <span><kbd>Space</kbd> Start/Pause</span>
+        <span><kbd>L</kbd> Lap</span>
+        <span><kbd>R</kbd> Reset</span>
+      </div>
+      <p class="copyright">SkillCraft Technology — Web Development Task 2 &bull; Precision Stopwatch</p>
+    </footer>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Keyboard Shortcuts Modal -->
+  <div class="modal-overlay hidden" id="shortcuts-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Keyboard Shortcuts</h3>
+        <button class="modal-close-btn" id="modal-close-btn" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="shortcut-row">
+          <div class="shortcut-keys"><kbd>Space</kbd></div>
+          <div class="shortcut-desc">Start or Pause stopwatch</div>
+        </div>
+        <div class="shortcut-row">
+          <div class="shortcut-keys"><kbd>L</kbd></div>
+          <div class="shortcut-desc">Record a new lap split time</div>
+        </div>
+        <div class="shortcut-row">
+          <div class="shortcut-keys"><kbd>R</kbd></div>
+          <div class="shortcut-desc">Reset stopwatch back to zero</div>
+        </div>
+        <div class="shortcut-row">
+          <div class="shortcut-keys"><kbd>T</kbd></div>
+          <div class="shortcut-desc">Cycle accent color theme</div>
+        </div>
+        <div class="shortcut-row">
+          <div class="shortcut-keys"><kbd>M</kbd></div>
+          <div class="shortcut-desc">Toggle sound effects mute/unmute</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
